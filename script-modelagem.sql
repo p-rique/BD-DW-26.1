@@ -4,12 +4,12 @@ Utilizado para controle e pesquisa dos dados adquiridos.
 Por: Ana Clara de Jesus, Mariana Rocha, Matheus Mangia, Paulo Cotta, Pedro Nunes e Ryan Domingos
 */
 
--- criação banco de dados
+-- Criação do banco de dados
 
 create database locadora;
 use locadora;
 
--- criação tabelas catalogacao vagas
+-- Descrição dos pátios
 create table patio (
     id_patio int primary key auto_increment,
     nome_patio varchar(100) not null,
@@ -17,7 +17,7 @@ create table patio (
     capacidade int
 );
 
--- tabela vagas dependente dos patios
+-- Catalogação das vagas em cada pátio
 create table vaga (
     id_vaga int primary key auto_increment,
     id_patio int not null,
@@ -26,7 +26,7 @@ create table vaga (
     foreign key (id_patio) references patio(id_patio)
 );
 
--- tabela clientes
+-- Tabela de clientes, com informações comuns a PF e PJ
 create table cliente (
     id_cliente int primary key auto_increment,
     tipo_cliente char(2) not null check (tipo_cliente in ('PF', 'PJ')), -- PF ou PJ
@@ -37,7 +37,7 @@ create table cliente (
     estado char(2)
 );
 
--- tipos clientes PF e PJ
+-- Tipos de clientes: Pessoa Física e Pessoa Jurídica
 create table cliente_pf (
     id_cliente int primary key,
     nome_cliente varchar(100) not null,
@@ -54,51 +54,51 @@ create table cliente_pj (
     foreign key (id_cliente) references cliente(id_cliente)
 );
 
--- motoristas
+-- Dados dos motoristas
 create table motorista (
     id_motorista int primary key auto_increment,
     id_cliente int not null,
     nome_motorista varchar(100) not null,
     numero_cnh varchar(20) not null unique,
-    categoria_cnh char(2) not null, -- ex.: AB, C, D
+    categoria_cnh char(3) not null check (categoria_cnh in ('A', 'B', 'C', 'D', 'E', 'ACC')),
     validade_cnh date not null,
     email_motorista varchar(100) unique not null,
     telefone_motorista varchar(11),
-    --genero char(1) not null, -- M ou F
-    --data_nascimento date not null,
-    --cpf varchar(11) not null unique,
+    genero char(1) not null check (genero in ('M', 'F', 'O')), -- Masculino, Feminino ou Outro
+    data_nascimento date not null,
+    relacao_motorista_cliente varchar(20) not null, -- ex.: contratado, familiar, amigo, etc.
     foreign key (id_cliente) references cliente(id_cliente)
 );
 
--- catalogacao precos
+-- Catalogação dos preços por categoria
 create table categoria (
     id_categoria int primary key auto_increment,
     nome_categoria varchar(50),
     valor_diaria decimal(10,2)
 );
 
--- tabela informacao veiculos
+-- Dados dos veículos disponíveis para locação
 create table veiculo (
     id_veiculo int primary key auto_increment,
     id_categoria int not null,
-    placa varchar(8) not null unique, -- ex.: ABC-1234
+    placa varchar(7) not null unique, -- ex.: ABC1D23
     marca varchar(50) not null,
     modelo varchar(50) not null,
     ano int not null,
     cor varchar(20),
-    km_atual int,
-    foto text, --url da foto
-    --mecanizacao char(1) not null check (mecanizacao in ('A', 'M')), -- auto ou manual
+    km_atual int, -- Quilometragem atual do veículo
+    foto text, -- URL da foto do veículo
+    --mecanizacao char(1) not null check (mecanizacao in ('A', 'M')), -- Verifica se o veículo é Automático ou Manual
     foreign key (id_categoria) references categoria(id_categoria)
 );
 
--- tabela acessorios
+-- Acessórios disponíveis para os veículos
 create table acessorios (
     id_acessorio int primary key,
     nome_acessorio varchar(50) not null
 );
 
--- ligacao veiculo-acessorios (N:N)
+-- Ligação veículo-acessório (N:N)
 create table veiculo_acessorios (
     id_veiculo int,
     id_acessorio int,
@@ -107,7 +107,7 @@ create table veiculo_acessorios (
     foreign key (id_acessorio) references acessorios(id_acessorio)
 );
 
--- tabela manutencao veiculos
+-- Manutenção dos veículos
 create table manutencao (
     id_manutencao int primary key auto_increment,
     id_veiculo int not null,
@@ -119,7 +119,7 @@ create table manutencao (
     foreign key (id_veiculo) references veiculo(id_veiculo)
 );
 
--- tabela reserva(pedido)
+-- Dados das reservas
 create table reserva (
     id_reserva int primary key auto_increment,
     id_cliente int not null,
@@ -129,26 +129,26 @@ create table reserva (
     data_previsao_retirada datetime not null,
     data_previsao_devolucao datetime not null,
     valor_previsto decimal(10,2),
-    status_reserva char(1) default 'A' check (status_reserva in ('A', 'C', 'F')), --ativa cancelada finalizada
+    status_reserva char(1) default 'A' check (status_reserva in ('A', 'C', 'F')), -- Verifica se a reserva está Ativa, Cancelada ou Finalizada
     foreign key (id_cliente) references cliente(id_cliente),
     foreign key (id_categoria) references categoria(id_categoria),
     foreign key (id_patio_retirada) references patio(id_patio)
 );
 
--- tabela locacao
+-- Dados sobre a locação em si
 create table locacao (
     id_locacao int primary key auto_increment,
     id_reserva int not null,
     id_veiculo int not null,
-    id_motorista int, -- opcional para clientes PF que não dirigem
+    id_motorista int not null,
     id_patio_retirada int not null,
-    id_patio_devolucao int, -- preencher após devolução
+    id_patio_devolucao int, -- Preencher após devolução
     data_retirada datetime not null,
     data_devolucao datetime,
     km_retirada int not null,
     km_devolucao int,
     valor_total decimal(10,2),
-    status_locacao char(1) default 'A' check (status_locacao in ('A', 'C', 'F')), --ativa cancelada finalizada
+    status_locacao char(1) default 'A' check (status_locacao in ('A', 'C', 'F')), -- Verifica se a locação está Ativa, Cancelada ou Finalizada
     foreign key (id_reserva) references reserva(id_reserva),
     foreign key (id_veiculo) references veiculo(id_veiculo),
     foreign key (id_motorista) references motorista(id_motorista),
