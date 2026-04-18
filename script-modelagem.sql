@@ -9,7 +9,7 @@ Por: Ana Clara de Jesus, Mariana Rocha, Matheus Mangia, Paulo Cotta, Pedro Nunes
 create database locadora;
 use locadora;
 
--- Descrição dos pátios
+-- Descrição das unidades físicas
 create table patio (
     id_patio int primary key auto_increment,
     nome_patio varchar(100) not null,
@@ -26,7 +26,7 @@ create table vaga (
     foreign key (id_patio) references patio(id_patio)
 );
 
--- Tabela de clientes, com informações comuns a PF e PJ
+-- Tabela de base dos locatários, com informações comuns a PF e PJ
 create table cliente (
     id_cliente int primary key auto_increment,
     tipo_cliente char(2) not null check (tipo_cliente in ('PF', 'PJ')), -- PF ou PJ
@@ -54,7 +54,7 @@ create table cliente_pj (
     foreign key (id_cliente) references cliente(id_cliente)
 );
 
--- Dados dos motoristas
+-- Dados dos motoristas vinculados aos clientes
 create table motorista (
     id_motorista int primary key auto_increment,
     id_cliente int not null,
@@ -77,7 +77,7 @@ create table categoria (
     valor_diaria decimal(10,2)
 );
 
--- Dados dos veículos disponíveis para locação
+-- Dados da frota disponível para locação
 create table veiculo (
     id_veiculo int primary key auto_increment,
     id_categoria int not null,
@@ -88,7 +88,7 @@ create table veiculo (
     cor varchar(20),
     km_atual int, -- Quilometragem atual do veículo
     foto text, -- URL da foto do veículo
-    --mecanizacao char(1) not null check (mecanizacao in ('A', 'M')), -- Verifica se o veículo é Automático ou Manual
+    status_veiculo VARCHAR(20) DEFAULT 'Disponível' CHECK (status_veiculo IN ('Disponível', 'Alugado', 'Manutenção', 'Vendido')),
     foreign key (id_categoria) references categoria(id_categoria)
 );
 
@@ -135,7 +135,7 @@ create table reserva (
     foreign key (id_patio_retirada) references patio(id_patio)
 );
 
--- Dados sobre a locação em si
+-- Dados sobre a transação de locação
 create table locacao (
     id_locacao int primary key auto_increment,
     id_reserva int not null,
