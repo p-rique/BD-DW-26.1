@@ -12,8 +12,8 @@ use locadora;
 -- criação tabelas catalogacao vagas
 create table patio (
     id_patio int primary key auto_increment,
-    nome varchar(100) not null,
-    endereco varchar(200) not null,
+    nome_patio varchar(100) not null,
+    endereco_patio varchar(200) not null,
     capacidade int
 );
 
@@ -21,8 +21,8 @@ create table patio (
 create table vaga (
     id_vaga int primary key auto_increment,
     id_patio int not null,
-    codigo varchar(8) not null, -- ex.: GIG-123,
-    disponibilidade char(1) default 'S' check (disponibilidade in ('S', 'N')), -- S ou N
+    codigo_vaga varchar(8) not null, -- ex.: GIG-123,
+    disponibilidade_vaga char(1) default 'S' check (disponibilidade in ('S', 'N')), -- S ou N
     foreign key (id_patio) references patio(id_patio)
 );
 
@@ -30,8 +30,8 @@ create table vaga (
 create table cliente (
     id_cliente int primary key auto_increment,
     tipo_cliente char(2) not null check (tipo_cliente in ('PF', 'PJ')), -- PF ou PJ
-    email varchar(100) unique,
-    telefone varchar(15),
+    email_cliente varchar(100) unique not null,
+    telefone_cliente varchar(11),
     bairro varchar(50),
     cidade varchar(50),
     estado char(2)
@@ -40,8 +40,8 @@ create table cliente (
 -- tipos clientes PF e PJ
 create table cliente_pf (
     id_cliente int primary key,
-    nome varchar(100) not null,
-    cpf varchar(11) not null unique,
+    nome_cliente varchar(100) not null,
+    cpf_cliente varchar(11) not null unique,
     data_nascimento date,
     foreign key (id_cliente) references cliente(id_cliente)
 );
@@ -58,14 +58,15 @@ create table cliente_pj (
 create table motorista (
     id_motorista int primary key auto_increment,
     id_cliente int not null,
-    nome varchar(100) not null,
-    cnh varchar(20) not null unique,
+    nome_motorista varchar(100) not null,
+    numero_cnh varchar(20) not null unique,
     categoria_cnh char(2) not null, -- ex.: AB, C, D
     validade_cnh date not null,
-    telefone varchar(15) not null,
-    genero char(1) not null, -- M ou F
-    data_nascimento date not null,
-    cpf varchar(11) not null unique,
+    email_motorista varchar(100) unique not null,
+    telefone_motorista varchar(11),
+    --genero char(1) not null, -- M ou F
+    --data_nascimento date not null,
+    --cpf varchar(11) not null unique,
     foreign key (id_cliente) references cliente(id_cliente)
 );
 
@@ -87,7 +88,7 @@ create table veiculo (
     cor varchar(20),
     km_atual int,
     foto text, --url da foto
-    mecanizacao char(1) not null check (mecanizacao in ('A', 'M')), -- auto ou manual
+    --mecanizacao char(1) not null check (mecanizacao in ('A', 'M')), -- auto ou manual
     foreign key (id_categoria) references categoria(id_categoria)
 );
 
@@ -110,7 +111,7 @@ create table veiculo_acessorios (
 create table manutencao (
     id_manutencao int primary key auto_increment,
     id_veiculo int not null,
-    data_manutencao date,
+    data_revisao date,
     pressao_pneus varchar(20),
     nivel_oleo varchar(20),
     km_manutencao int,
