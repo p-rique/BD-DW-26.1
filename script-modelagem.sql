@@ -22,7 +22,7 @@ create table vaga (
     id_vaga int primary key auto_increment,
     id_patio int not null,
     codigo_vaga varchar(8) not null, -- ex.: GIG-123,
-    disponibilidade_vaga char(1) default 'S' check (disponibilidade in ('S', 'N')), -- S ou N
+    disponibilidade_vaga char(1) default 'L' check (disponibilidade in ('L', 'O')), -- Livre ou Ocupada
     foreign key (id_patio) references patio(id_patio)
 );
 
@@ -144,10 +144,12 @@ create table locacao (
     id_patio_retirada int not null,
     id_patio_devolucao int, -- Preencher após devolução
     data_retirada datetime not null,
-    data_devolucao datetime,
+    data_devolucao datetime, -- Preencher após devolução
     km_retirada int not null,
-    km_devolucao int,
-    valor_total decimal(10,2),
+    km_devolucao int, -- Preencher após devolução
+    combustivel_retirada varchar(20) not null,
+    combustivel_devolucao varchar(20), -- Preencher após devolução
+    valor_total decimal(10,2), -- Preencher após devolução
     status_locacao char(1) default 'A' check (status_locacao in ('A', 'C', 'F')), -- Verifica se a locação está Ativa, Cancelada ou Finalizada
     foreign key (id_reserva) references reserva(id_reserva),
     foreign key (id_veiculo) references veiculo(id_veiculo),
