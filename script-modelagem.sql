@@ -2,6 +2,7 @@
 Utilizado para controle e pesquisa dos dados adquiridos.
 
 Por: Ana Clara de Jesus, Mariana Rocha, Matheus Mangia, Paulo Cotta, Pedro Nunes e Ryan Domingos
+DRE: 124388471, 122147926, 123378716, 122156268, 123177330, 123137429
 */
 
 -- Criação do banco de dados
