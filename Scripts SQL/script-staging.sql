@@ -1,0 +1,6 @@
+-- Ana Clara de Jesus Nascimento, DRE 124388471
+-- Mariana Rocha de Moraes, DRE 122147926
+-- Matheus Mangia Terra Suzano, DRE 123378716
+-- Paulo Henrique Cotta de Assumpção, DRE 122156268
+-- Pedro Nunes de Oliveira Pessanha, DRE 123177330
+-- Ryan Domingos dos Santos Saraiva, DRE 123137429
