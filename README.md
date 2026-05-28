@@ -33,9 +33,9 @@ O projeto está dividido em três níveis de abstração, cujos arquivos encontr
 
 ```text
 ├── modelos/
-│   ├── modelo_conceitual.png    # Diagrama Conceitual (MER)
-│   ├── modelo_logico.png        # Diagrama Lógico Relacional
-│   └── dicionario_de_dados.pdf  # Documentação detalhada de cada atributo e tabela
+│   ├── modelo Conceitual.drawio.pdf   # Diagrama Conceitual (MER)
+│   ├── Modelo Lógico SDB OLTP.pdf        # Diagrama Lógico Relacional
+│   └── Dicionario de Dados.pdf  # Documentação detalhada de cada atributo e tabela
 ├── scripts_sql/
-│   └── 01_ddl_criacao_oltp.sql  # Script físico de criação do banco de dados (DDL)
+│   └── script-modelagem.sql  # Script físico de criação do banco de dados (DDL)
 └── README.md                    # Este arquivo de documentação
