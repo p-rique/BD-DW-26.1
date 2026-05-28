@@ -30,7 +30,7 @@ O projeto está dividido em três níveis de abstração, cujos arquivos encontr
 ---
 
 ## 📂 Estrutura do Repositório
-
+Projeto Modelagem SBD OLTP.pdf
 ```text
 ├── modelos/
 │   ├── modelo Conceitual.drawio.pdf   # Diagrama Conceitual (MER)
@@ -38,4 +38,5 @@ O projeto está dividido em três níveis de abstração, cujos arquivos encontr
 │   └── Dicionario de Dados.pdf  # Documentação detalhada de cada atributo e tabela
 ├── scripts_sql/
 │   └── script-modelagem.sql  # Script físico de criação do banco de dados (DDL)
+└── Projeto Modelagem SBD OLTP.pdf # Descrição do projeto
 └── README.md                    # Este arquivo de documentação
