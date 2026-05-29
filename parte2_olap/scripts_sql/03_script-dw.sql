@@ -9,98 +9,135 @@ DROP DATABASE IF EXISTS locadora_dw_analitico;
 CREATE DATABASE IF NOT EXISTS locadora_dw_analitico CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 USE locadora_dw_analitico;
 
--- TABELAS DIMENSÃO
+-- 1. TABELAS DIMENSÃO
 
-CREATE TABLE Dim_Tempo (
-    Id_tempo        INT             NOT NULL, -- YYYYMMDD
-    Data_completa   DATE            NOT NULL,
-    Ano             INT             NOT NULL,
-    Mes             INT             NOT NULL,
-    Dia             INT             NOT NULL,
-    Dia_Semana      VARCHAR(20)     NOT NULL,
-
-    CONSTRAINT PK_Dim_Tempo PRIMARY KEY (Id_tempo)
+CREATE TABLE dim_tempo (
+    sk_tempo            INT             PRIMARY KEY, -- Chave inteligente (Ex: 20260529)
+    data_completa       DATE            NOT NULL,    -- Data real (Ex: 2026-05-29)
+    ano                 INT             NOT NULL,
+    mes                 INT             NOT NULL,
+    nome_mes            VARCHAR(15)     NOT NULL,
+    dia                 INT             NOT NULL,
+    dia_semana          INT             NOT NULL,    -- 1 a 7
+    nome_dia_semana     VARCHAR(15)     NOT NULL,    -- 'Sexta-feira'
+    trimestre           INT             NOT NULL,
+    tipo_dia            VARCHAR(15)     NOT NULL,    -- 'Dia Útil' ou 'Fim de Semana'
+    INDEX idx_data_completa (data_completa)
 );
 
-CREATE TABLE Dim_Patio (
-    Id_patio_sk     INT             NOT NULL AUTO_INCREMENT, -- Surrogate Key analítica
-    Id_patio_oltp   INT             NOT NULL,                -- ID de origem operacional
-    Nome_patio      VARCHAR(100)    NOT NULL,
-    Cidade          VARCHAR(100)    NOT NULL,
-    Uf              CHAR(2)         NOT NULL,
-    Capacidade      INT             NULL,
+CREATE TABLE dim_patio (
+    sk_patio            INT             NOT NULL AUTO_INCREMENT,
+    id_patio_oltp       INT             NOT NULL,
+    nome_patio          VARCHAR(100)    NOT NULL,
+    cidade              VARCHAR(100)    NOT NULL,
+    uf                  CHAR(2)         NOT NULL,
+    capacidade          INT             NULL,
 
-    CONSTRAINT PK_Dim_Patio PRIMARY KEY (Id_patio_sk)
+    CONSTRAINT pk_dim_patio PRIMARY KEY (sk_patio)
 );
 
-CREATE TABLE Dim_Veiculo (
-    Id_veiculo_sk   INT             NOT NULL AUTO_INCREMENT,
-    Id_veiculo_oltp INT             NOT NULL,
-    Placa           VARCHAR(10)     NOT NULL,                -- ABC1D23 (Ajustado para 10 por segurança)
-    Marca           VARCHAR(50)     NOT NULL,
-    Modelo          VARCHAR(50)     NOT NULL,
-    Categoria_Nome  VARCHAR(50)     NOT NULL,
-    Ano             INT             NOT NULL,                -- YYYY
-    Tipo_Cambio     VARCHAR(20)     NULL,
-    Empresa_Dona    VARCHAR(100)    NOT NULL,                -- Identifica a qual das 6 empresas o veículo pertence
+CREATE TABLE dim_veiculo (
+    sk_veiculo          INT             NOT NULL AUTO_INCREMENT,
+    id_veiculo_oltp     INT             NOT NULL,
+    placa               VARCHAR(10)     NOT NULL,
+    marca               VARCHAR(50)     NOT NULL,
+    modelo              VARCHAR(50)     NOT NULL,
+    categoria_nome      VARCHAR(50)     NOT NULL,
+    ano                 INT             NOT NULL,
+    tipo_cambio         VARCHAR(20)     NULL,
+    empresa_dona        VARCHAR(100)    NOT NULL, 
 
-    CONSTRAINT PK_Dim_Veiculo PRIMARY KEY (Id_veiculo_sk)
+    CONSTRAINT pk_dim_veiculo PRIMARY KEY (sk_veiculo)
 );
 
-CREATE TABLE Dim_Cliente (
-    Id_cliente_sk        INT             NOT NULL AUTO_INCREMENT,
-    Id_cliente_oltp      INT             NOT NULL,
-    Tipo_Cliente         CHAR(2)         NOT NULL,                -- Restrição ('PF' ou 'PJ')
-    Nome_ou_Razao_Social VARCHAR(100)    NOT NULL,
-    Cidade               VARCHAR(100)    NULL,
-    Uf                   CHAR(2)         NULL,
+CREATE TABLE dim_cliente (
+    sk_cliente          INT             NOT NULL AUTO_INCREMENT,
+    id_cliente_oltp     INT             NOT NULL,
+    tipo_cliente        CHAR(2)         NOT NULL, 
+    nome_ou_razao_social VARCHAR(100)   NOT NULL,
+    cidade              VARCHAR(100)    NULL,
+    uf                  CHAR(2)         NULL,
 
-    CONSTRAINT PK_Dim_Cliente     PRIMARY KEY (Id_cliente_sk),
-    CONSTRAINT CHK_Tipo_Cliente_DW CHECK (Tipo_Cliente IN ('PF', 'PJ'))
+    CONSTRAINT pk_dim_cliente PRIMARY KEY (sk_cliente),
+    CONSTRAINT chk_tipo_cliente_dw CHECK (tipo_cliente IN ('PF', 'PJ'))
 );
 
-CREATE TABLE Dim_Motorista (
-    Id_motorista_sk   INT             NOT NULL AUTO_INCREMENT,
-    Id_motorista_oltp INT             NOT NULL,
-    Nome_motorista    VARCHAR(100)    NOT NULL,
-    Categoria_Cnh     VARCHAR(3)      NOT NULL,
-    Genero_motorista  CHAR(1)         NULL,
-    Faixa_Etaria      VARCHAR(20)     NULL,                    -- Calculada no processo de ETL (ex: '25-34 anos')
+CREATE TABLE dim_motorista (
+    sk_motorista        INT             NOT NULL AUTO_INCREMENT,
+    id_motorista_oltp   INT             NOT NULL,
+    nome_motorista      VARCHAR(100)    NOT NULL,
+    categoria_cnh       VARCHAR(3)      NOT NULL,
+    genero_motorista    CHAR(1)         NULL,
+    faixa_etaria        VARCHAR(20)     NULL, 
 
-    CONSTRAINT PK_Dim_Motorista PRIMARY KEY (Id_motorista_sk)
+    CONSTRAINT pk_dim_motorista PRIMARY KEY (sk_motorista)
 );
 
--- TABELA FATO
+-- 2. TABELA FATO
 
-CREATE TABLE Fato_Locacao (
-    Id_locacao_oltp     INT             NOT NULL,
-    Fk_Tempo_Retirada   INT             NOT NULL,
-    Fk_Tempo_Devolucao  INT             NULL,     -- NULL até devolução
-    Fk_Patio_Retirada   INT             NOT NULL, -- Estado Inicial (Origem)
-    Fk_Patio_Devolucao  INT             NULL,     -- Estado Final (Destino), NULL até devolução
-    Fk_Veiculo          INT             NOT NULL,
-    Fk_Cliente          INT             NOT NULL,
-    Fk_Motorista        INT             NOT NULL,
+CREATE TABLE fato_locacao (
+    sk_locacao          INT             AUTO_INCREMENT PRIMARY KEY,
+    id_locacao_oltp     INT             NOT NULL,
+    sk_cliente          INT             NOT NULL,
+    sk_motorista        INT             NOT NULL, 
+    sk_veiculo          INT             NOT NULL,
+    sk_patio_retirada   INT             NOT NULL,
+    sk_patio_devolucao  INT             NOT NULL,
+    sk_tempo_retirada   INT             NOT NULL,
+    sk_tempo_devolucao  INT             NULL,       -- Null até a devolução
     
-    Qtd_Diarias         INT             NULL,     -- Calculado no pipeline de carga (ETL)
-    Km_Rodados          INT             NULL,     -- Métrica: Km_devolucao - Km_retirada
-    Valor_Total         DECIMAL(10,2)   NULL,     
-
-    CONSTRAINT PK_Fato_Locacao      PRIMARY KEY (Id_locacao_oltp),
-    CONSTRAINT FK_Fato_Tempo_Ret    FOREIGN KEY (Fk_Tempo_Retirada)  REFERENCES Dim_Tempo(Id_tempo),
-    CONSTRAINT FK_Fato_Tempo_Dev    FOREIGN KEY (Fk_Tempo_Devolucao) REFERENCES Dim_Tempo(Id_tempo),
-    CONSTRAINT FK_Fato_Patio_Ret    FOREIGN KEY (Fk_Patio_Retirada)  REFERENCES Dim_Patio(Id_patio_sk),
-    CONSTRAINT FK_Fato_Patio_Dev    FOREIGN KEY (Fk_Patio_Devolucao) REFERENCES Dim_Patio(Id_patio_sk),
-    CONSTRAINT FK_Fato_Veiculo      FOREIGN KEY (Fk_Veiculo)         REFERENCES Dim_Veiculo(Id_veiculo_sk),
-    CONSTRAINT FK_Fato_Cliente      FOREIGN KEY (Fk_Cliente)         REFERENCES Dim_Cliente(Id_cliente_sk),
-    CONSTRAINT FK_Fato_Motorista    FOREIGN KEY (Fk_Motorista)       REFERENCES Dim_Motorista(Id_motorista_sk),
+    -- Métricas / Fatos
+    qtd_locacao         INT             DEFAULT 1,
+    km_rodados          INT             NULL,    
+    valor_total         DECIMAL(10,2)   NULL,
     
+    -- Constraints de Chave Estrangeira
+    CONSTRAINT fk_fato_cliente      FOREIGN KEY (sk_cliente)         REFERENCES dim_cliente(sk_cliente),
+    CONSTRAINT fk_fato_motorista    FOREIGN KEY (sk_motorista)       REFERENCES dim_motorista(sk_motorista),
+    CONSTRAINT fk_fato_veiculo      FOREIGN KEY (sk_veiculo)         REFERENCES dim_veiculo(sk_veiculo),
+    CONSTRAINT fk_fato_patio_ret    FOREIGN KEY (sk_patio_retirada)  REFERENCES dim_patio(sk_patio),
+    CONSTRAINT fk_fato_patio_dev    FOREIGN KEY (sk_patio_devolucao) REFERENCES dim_patio(sk_patio),
+    CONSTRAINT fk_fato_tempo_ret    FOREIGN KEY (sk_tempo_retirada)  REFERENCES dim_tempo(sk_tempo),
+    CONSTRAINT fk_fato_tempo_dev    FOREIGN KEY (sk_tempo_devolucao) REFERENCES dim_tempo(sk_tempo),
+
     -- Índices de Performance para Consultas OLAP/BI
-    INDEX Idx_Fato_Tempo_Ret   (Fk_Tempo_Retirada),
-    INDEX Idx_Fato_Tempo_Dev   (Fk_Tempo_Devolucao),
-    INDEX Idx_Fato_Patio_Ret   (Fk_Patio_Retirada),
-    INDEX Idx_Fato_Patio_Dev   (Fk_Patio_Devolucao),
-    INDEX Idx_Fato_Veiculo     (Fk_Veiculo),
-    INDEX Idx_Fato_Cliente     (Fk_Cliente),
-    INDEX Idx_Fato_Motorista   (Fk_Motorista)
+    INDEX idx_fato_tempo_ret   (sk_tempo_retirada),
+    INDEX idx_fato_tempo_dev   (sk_tempo_devolucao),
+    INDEX idx_fato_patio_ret   (sk_patio_retirada),
+    INDEX idx_fato_patio_dev   (sk_patio_devolucao),
+    INDEX idx_fato_veiculo     (sk_veiculo),
+    INDEX idx_fato_cliente     (sk_cliente),
+    INDEX idx_fato_motorista   (sk_motorista)
 );
+
+-- 3. POPULAÇÃO DA DIM_TEMPO
+
+DELIMITER $$
+CREATE PROCEDURE popular_dim_tempo(IN data_inicio DATE, IN data_fim DATE)
+BEGIN
+    DECLARE data_atual DATE;
+    SET data_atual = data_inicio;
+    SET lc_time_names = 'pt_BR';
+
+    WHILE data_atual <= data_fim DO
+        INSERT INTO dim_tempo (
+            sk_tempo, data_completa, ano, mes, nome_mes, dia, dia_semana, nome_dia_semana, trimestre, tipo_dia
+        ) VALUES (
+            CAST(DATE_FORMAT(data_atual, '%Y%m%d') AS UNSIGNED), 
+            data_atual,
+            YEAR(data_atual),
+            MONTH(data_atual),
+            MONTHNAME(data_atual),
+            DAY(data_atual),
+            DAYOFWEEK(data_atual),
+            DAYNAME(data_atual),
+            QUARTER(data_atual),
+            IF(DAYOFWEEK(data_atual) IN (1, 7), 'Fim de Semana', 'Dia Útil')
+        );
+        SET data_atual = DATE_ADD(data_atual, INTERVAL 1 DAY);
+    END WHILE;
+END$$
+DELIMITER ;
+
+-- Executa o preenchimento automático
+CALL popular_dim_tempo('2020-01-01', '2030-12-31');
