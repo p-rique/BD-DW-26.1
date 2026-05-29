@@ -8,7 +8,7 @@
 USE locadora_dw_staging;
 
 -- ==============================================================================
--- 0. LIMPEZA DA STAGING AREA (Garantindo Idempotência do Pipeline)
+-- 0. LIMPEZA DA STAGING AREA 
 -- ==============================================================================
 TRUNCATE TABLE Stg_patio;
 TRUNCATE TABLE Stg_veiculo;
