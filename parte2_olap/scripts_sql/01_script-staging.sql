@@ -12,6 +12,7 @@ USE locadora_dw_staging;
 -- TABELAS DE STAGING
 
 CREATE TABLE Stg_patio (
+    Sistema_Origem              VARCHAR(50)     NULL, -- Identificação da base de dados de origem
     Id_patio_oltp               INT             NULL,
     Nome_patio                  VARCHAR(100)    NULL,
     Cidade                      VARCHAR(100)    NULL,
@@ -21,6 +22,7 @@ CREATE TABLE Stg_patio (
 );
 
 CREATE TABLE Stg_veiculo (
+    Sistema_Origem              VARCHAR(50)     NULL, -- Identificação da base de dados de origem
     Id_veiculo_oltp             INT             NULL,
     Placa                       VARCHAR(10)     NULL,
     Marca                       VARCHAR(50)     NULL,
@@ -33,6 +35,7 @@ CREATE TABLE Stg_veiculo (
 );
 
 CREATE TABLE Stg_cliente (
+    Sistema_Origem              VARCHAR(50)     NULL, -- Identificação da base de dados de origem
     Id_cliente_oltp             INT             NULL,
     Tipo_Cliente                CHAR(2)         NULL,
     Nome_ou_Razao_Social        VARCHAR(100)    NULL,
@@ -42,6 +45,7 @@ CREATE TABLE Stg_cliente (
 );
 
 CREATE TABLE Stg_motorista (
+    Sistema_Origem              VARCHAR(50)     NULL, -- Identificação da base de dados de origem
     Id_motorista_oltp           INT             NULL,
     Nome_motorista              VARCHAR(100)    NULL,
     Categoria_Cnh               VARCHAR(3)      NULL,
@@ -51,6 +55,7 @@ CREATE TABLE Stg_motorista (
 );
 
 CREATE TABLE Stg_locacao (
+    Sistema_Origem              VARCHAR(50)     NULL, -- Identificação da base de dados de origem
     Id_locacao_oltp             INT             NULL,
     Id_patio_retirada_oltp      INT             NULL,
     Id_patio_devolucao_oltp     INT             NULL,

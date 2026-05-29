@@ -17,7 +17,6 @@ CREATE TABLE Dim_Tempo (
     Ano             INT             NOT NULL,
     Mes             INT             NOT NULL,
     Dia             INT             NOT NULL,
-    Trimestre       INT             NOT NULL,
     Dia_Semana      VARCHAR(20)     NOT NULL,
 
     CONSTRAINT PK_Dim_Tempo PRIMARY KEY (Id_tempo)
