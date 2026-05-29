@@ -30,13 +30,22 @@ O projeto está dividido em três níveis de abstração, cujos arquivos encontr
 ---
 
 ## 📂 Estrutura do Repositório
-Projeto Modelagem SBD OLTP.pdf
+
 ```text
-├── modelos/
-│   ├── modelo Conceitual.drawio.pdf   # Diagrama Conceitual (MER)
-│   ├── Modelo Lógico SDB OLTP.pdf        # Diagrama Lógico Relacional
-│   └── Dicionario de Dados.pdf  # Documentação detalhada de cada atributo e tabela
-├── scripts_sql/
-│   └── script-modelagem.sql  # Script físico de criação do banco de dados (DDL)
-└── Projeto Modelagem SBD OLTP.pdf # Descrição do projeto
-└── README.md                    # Este arquivo de documentação
+├── parte1_oltp/                  # Módulo Transacional (Operacional)
+│   ├── modelos/
+│   │   ├── locadora_trabalho_bg_dw.mwb.zip   # Arquivo de modelagem do MySQL Workbench
+│   │   ├── modelo Conceitual.drawio.pdf  # Diagrama Conceitual (MER)
+│   │   └── Modelo Lógico SDB OLTP.pdf     # Diagrama Lógico Relacional
+│   └── scripts_sql/
+│       └── script-modelagem.sql          # Script DDL de criação da base OLTP
+│
+├── parte2_olap/                  # Módulo Analítico (Data Warehouse)
+│   └── scripts_sql/
+│       ├── 01_script-staging.sql         # Criação das tabelas da Staging Area | A SER ADICIONADO
+│       ├── 02_script-extract.sql         # Extração e ingestão de dados na Staging | A SER ADICIONADO
+│       └── 03_script-dw.sql              # Criação das Dimensões/Fato e carga do DW
+│
+├── Dicionario de Dados.pdf       # Documentação detalhada de atributos e tabelas
+├── Projeto Modelagem SBD OLTP.pdf # Relatório descritivo do projeto operacional
+└── README.md                     # Documentação principal do repositório
