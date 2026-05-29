@@ -37,11 +37,11 @@ CREATE TABLE Dim_Patio (
 CREATE TABLE Dim_Veiculo (
     Id_veiculo_sk   INT             NOT NULL AUTO_INCREMENT,
     Id_veiculo_oltp INT             NOT NULL,
-    Placa           VARCHAR(7)      NOT NULL,                --ABC1D23
+    Placa           VARCHAR(10)     NOT NULL,                -- ABC1D23 (Ajustado para 10 por segurança)
     Marca           VARCHAR(50)     NOT NULL,
     Modelo          VARCHAR(50)     NOT NULL,
     Categoria_Nome  VARCHAR(50)     NOT NULL,
-    Ano             INT             NOT NULL,                --YYYY
+    Ano             INT             NOT NULL,                -- YYYY
     Tipo_Cambio     VARCHAR(20)     NULL,
     Empresa_Dona    VARCHAR(100)    NOT NULL,                -- Identifica a qual das 6 empresas o veículo pertence
 
@@ -93,5 +93,15 @@ CREATE TABLE Fato_Locacao (
     CONSTRAINT FK_Fato_Patio_Ret    FOREIGN KEY (Fk_Patio_Retirada)  REFERENCES Dim_Patio(Id_patio_sk),
     CONSTRAINT FK_Fato_Patio_Dev    FOREIGN KEY (Fk_Patio_Devolucao) REFERENCES Dim_Patio(Id_patio_sk),
     CONSTRAINT FK_Fato_Veiculo      FOREIGN KEY (Fk_Veiculo)         REFERENCES Dim_Veiculo(Id_veiculo_sk),
-    CONSTRAINT FK_Fato_Cliente      FOREIGN KEY (Fk_Cliente)         REFERENCES Dim_Cliente(Id_cliente_sk)
+    CONSTRAINT FK_Fato_Cliente      FOREIGN KEY (Fk_Cliente)         REFERENCES Dim_Cliente(Id_cliente_sk),
+    CONSTRAINT FK_Fato_Motorista    FOREIGN KEY (Fk_Motorista)       REFERENCES Dim_Motorista(Id_motorista_sk),
+    
+    -- Índices de Performance para Consultas OLAP/BI
+    INDEX Idx_Fato_Tempo_Ret   (Fk_Tempo_Retirada),
+    INDEX Idx_Fato_Tempo_Dev   (Fk_Tempo_Devolucao),
+    INDEX Idx_Fato_Patio_Ret   (Fk_Patio_Retirada),
+    INDEX Idx_Fato_Patio_Dev   (Fk_Patio_Devolucao),
+    INDEX Idx_Fato_Veiculo     (Fk_Veiculo),
+    INDEX Idx_Fato_Cliente     (Fk_Cliente),
+    INDEX Idx_Fato_Motorista   (Fk_Motorista)
 );

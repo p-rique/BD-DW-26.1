@@ -9,67 +9,58 @@ DROP DATABASE IF EXISTS locadora_dw_staging;
 CREATE DATABASE IF NOT EXISTS locadora_dw_staging CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 USE locadora_dw_staging;
 
--- Staging de Pátios
+-- TABELAS DE STAGING
+
 CREATE TABLE Stg_patio (
-    Id_sistema_origem           VARCHAR(20)     NULL,
-    Id_patio_origem             INT             NULL,
-    Nome_patio                  VARCHAR(150)    NULL,
+    Id_patio_oltp               INT             NULL,
+    Nome_patio                  VARCHAR(100)    NULL,
     Cidade                      VARCHAR(100)    NULL,
     Uf                          CHAR(2)         NULL,
     Capacidade                  INT             NULL,
     Data_Carga                  DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
--- Staging de Veículos
 CREATE TABLE Stg_veiculo (
-    Id_sistema_origem           VARCHAR(20)     NULL,
-    Id_veiculo_origem           INT             NULL,
-    Placa                       VARCHAR(20)     NULL,
-    Marca                       VARCHAR(100)    NULL,
-    Modelo                      VARCHAR(100)    NULL,
-    Grupo_categoria             VARCHAR(100)    NULL,
+    Id_veiculo_oltp             INT             NULL,
+    Placa                       VARCHAR(10)     NULL,
+    Marca                       VARCHAR(50)     NULL,
+    Modelo                      VARCHAR(50)     NULL,
+    Categoria_Nome              VARCHAR(50)     NULL,
     Ano                         INT             NULL,
-    Tipo_cambio                 VARCHAR(50)     NULL,
-    Empresa_dona                VARCHAR(150)    NULL,
+    Tipo_Cambio                 VARCHAR(20)     NULL,
+    Empresa_Dona                VARCHAR(100)    NULL,
     Data_Carga                  DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
--- Staging de Clientes
 CREATE TABLE Stg_cliente (
-    Id_sistema_origem           VARCHAR(20)     NULL,
-    Id_cliente_origem           INT             NULL,
-    Tipo_cliente                VARCHAR(5)      NULL,
-    Nome_cliente                VARCHAR(200)    NULL,
-    Cpf_cnpj                    VARCHAR(20)     NULL,
+    Id_cliente_oltp             INT             NULL,
+    Tipo_Cliente                CHAR(2)         NULL,
+    Nome_ou_Razao_Social        VARCHAR(100)    NULL,
     Cidade                      VARCHAR(100)    NULL,
     Uf                          CHAR(2)         NULL,
     Data_Carga                  DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
--- Staging de Motoristas
 CREATE TABLE Stg_motorista (
-    Id_sistema_origem           VARCHAR(20)     NULL,
-    Id_motorista_origem         INT             NULL,
-    Nome_motorista              VARCHAR(200)    NULL,
-    Categoria_cnh               VARCHAR(10)     NULL,
+    Id_motorista_oltp           INT             NULL,
+    Nome_motorista              VARCHAR(100)    NULL,
+    Categoria_Cnh               VARCHAR(3)      NULL,
     Genero_motorista            CHAR(1)         NULL,
-    Data_nascimento             DATE            NULL,
+    Data_Nascimento             DATE            NULL, -- Mantido para calcular a Faixa_Etaria no DW
     Data_Carga                  DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
--- Staging de Locações (A Fato Transacional)
 CREATE TABLE Stg_locacao (
-    Id_sistema_origem           VARCHAR(20)     NULL,
-    Id_locacao_origem           INT             NULL,
-    Id_patio_retirada_origem    INT             NULL,
-    Id_patio_devolucao_origem   INT             NULL,
-    Id_veiculo_origem           INT             NULL,
-    Id_cliente_origem           INT             NULL,
-    Id_motorista_origem         INT             NULL,
-    Data_retirada               DATETIME        NULL,
-    Data_devolucao              DATETIME        NULL,
-    Km_retirada                 INT             NULL,
-    Km_devolucao                INT             NULL,
-    Valor_total                 DECIMAL(10,2)   NULL,
+    Id_locacao_oltp             INT             NULL,
+    Id_patio_retirada_oltp      INT             NULL,
+    Id_patio_devolucao_oltp     INT             NULL,
+    Id_veiculo_oltp             INT             NULL,
+    Id_cliente_oltp             INT             NULL,
+    Id_motorista_oltp           INT             NULL,
+    Data_Retirada               DATETIME        NULL,
+    Data_Devolucao              DATETIME        NULL,
+    Km_Retirada                 INT             NULL,
+    Km_Devolucao                INT             NULL,
+    Valor_Total                 DECIMAL(10,2)   NULL,
     Data_Carga                  DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
