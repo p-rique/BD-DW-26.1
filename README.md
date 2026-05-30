@@ -42,8 +42,8 @@ O projeto está dividido em três níveis de abstração, cujos arquivos encontr
 │
 ├── parte2_olap/                  # Módulo Analítico (Data Warehouse)
 │   └── scripts_sql/
-│       ├── 01_script-staging.sql         # Criação das tabelas da Staging Area | A SER ADICIONADO
-│       ├── 02_script-extract.sql         # Extração e ingestão de dados na Staging | A SER ADICIONADO
+│       ├── 01_script-staging.sql         # Criação das tabelas da Staging Area
+│       ├── 02_script-extract.sql         # Extração e ingestão de dados na Staging
 │       └── 03_script-dw.sql              # Criação das Dimensões/Fato e carga do DW
 │
 ├── Dicionario de Dados.pdf       # Documentação detalhada de atributos e tabelas
