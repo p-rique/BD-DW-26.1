@@ -140,4 +140,6 @@ END$$
 DELIMITER ;
 
 -- Executa o preenchimento automático
+START TRANSACTION;
 CALL popular_dim_tempo('2020-01-01', '2030-12-31');
+COMMIT;
