@@ -113,16 +113,16 @@ INSERT INTO Stg_locacao (
 )
 SELECT 
     'Grupo 01 - Alpha',
-    L.Id_locacao, 
-    L.Id_patio_real_retirada, 
-    L.Id_patio_real_devolucao,
-    L.Id_veiculo, 
-    R.Id_cliente, 
-    L.Id_motorista,
-    L.Data_hora_retirada_real, 
-    L.Data_hora_devolucao_real,
-    L.Km_retirada, 
-    L.Km_devolucao, 
-    L.Valor_total_final
-FROM locadora_dw.Locacao L
-JOIN locadora_dw.Reserva R ON L.Id_reserva = R.Id_reserva;
+    L.id_locacao, 
+    L.id_patio_retirada,       
+    L.id_patio_devolucao,  
+    L.id_veiculo, 
+    R.id_cliente, 
+    L.id_motorista,
+    L.data_hora_retirada_real, 
+    L.data_hora_devolucao_real,
+    L.km_retirada, 
+    L.km_devolucao, 
+    L.valor_total_final
+FROM locadora_dw.locacao L
+JOIN locadora_dw.reserva R ON L.id_reserva = R.id_reserva;
