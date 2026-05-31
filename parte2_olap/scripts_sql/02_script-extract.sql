@@ -393,7 +393,7 @@ INSERT INTO Stg_cliente (
 SELECT 
     'Grupo 04', 
     id_cliente, 
-    CASE WHEN CHAR_LENGTH(cpf_cnpj) > 14 THEN 'PJ' ELSE 'PF' END, -- Verificamos o número de caracteres do CPF/CNPJ para inferir se o cliente é PF ou PJ
+    CASE WHEN CHAR_LENGTH(REPLACE(REPLACE(REPLACE(cpf_cnpj, '.', ''), '-', ''), '/', '')) > 11 THEN 'PJ' ELSE 'PF' END, 
     nome, 
     NULL, -- Endereço do cliente não é armazenado no modelo deles
     NULL
@@ -446,4 +446,8 @@ SELECT
     NULL, 
     P.valor -- Trazendo o valor da tabela de pagamento
 FROM db_grupo_04.locacao L
-LEFT JOIN db_grupo_04.pagamento P ON L.id_locacao = P.id_locacao;
+LEFT JOIN (
+    SELECT id_locacao, SUM(valor) AS valor_total 
+    FROM db_grupo_04.pagamento 
+    GROUP BY id_locacao
+) P ON L.id_locacao = P.id_locacao;
