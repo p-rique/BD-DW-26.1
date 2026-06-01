@@ -1,10 +1,13 @@
--- Grupo 03
+-- Grupo:
 -- Bernardo Brandão Pozzato Carvalho Costa (123289593)
 -- Enzo de Carvalho Sampaio (123386206)
 -- Giovanni Faletti Almeida (123184214)
 -- Guilherme En Shih Hu (123224674)
 -- Maria Victoria França Silva Ramos (123311073)
 
+
+--  MODELO ENTIDADE-RELACIONAMENTO - SISTEMA DE LOCAÇÃO DE VEÍCULOS
+-- Esse drop é importante, porque senão, se vc rodar mais de uma vez, dá erro de "vc já criou essa tabela"
 DROP DATABASE IF EXISTS locadora;
 CREATE DATABASE IF NOT EXISTS locadora CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 USE locadora;

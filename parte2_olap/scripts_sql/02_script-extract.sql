@@ -1,453 +1,308 @@
--- Ana Clara de Jesus Nascimento, DRE 124388471
--- Mariana Rocha de Moraes, DRE 122147926
--- Matheus Mangia Terra Suzano, DRE 123378716
--- Paulo Henrique Cotta de Assumpção, DRE 122156268
--- Pedro Nunes de Oliveira Pessanha, DRE 123177330
--- Ryan Domingos dos Santos Saraiva, DRE 123137429
-
-USE locadora_dw_staging;
-
--- LIMPEZA DA STAGING AREA
-
-TRUNCATE TABLE Stg_patio;
-TRUNCATE TABLE Stg_veiculo;
-TRUNCATE TABLE Stg_cliente;
-TRUNCATE TABLE Stg_motorista;
-TRUNCATE TABLE Stg_locacao;
-
--- PROCESSOS DE EXTRAÇÃO (ETL)
-
--- Grupo 01
-
-INSERT INTO Stg_patio (
-    Sistema_Origem,
-    Id_patio_oltp, 
-    Nome_patio, 
-    Cidade, 
-    Uf, 
-    Capacidade
-)
-SELECT DISTINCT
-    'Grupo 01', -- Identificação da base de dados de origem (nossa equipe)
-    P.Id_patio, 
-    P.Nome_patio, 
-    E.Cidade, 
-    E.Uf, 
-    P.Capacidade
-FROM locadora_dw.Patio P
-JOIN locadora_dw.Endereco E ON P.Id_endereco = E.Id_endereco;
-
-INSERT INTO Stg_veiculo (
-    Sistema_Origem,
-    Id_veiculo_oltp, 
-    Placa, 
-    Marca, 
-    Modelo, 
-    Categoria_Nome, 
-    Ano, 
-    Tipo_Cambio, 
-    Empresa_Dona
-)
-SELECT DISTINCT
-    'Grupo 01',
-    V.Id_veiculo, 
-    V.Placa, 
-    V.Marca, 
-    V.Modelo, 
-    C.Nome_categoria, 
-    V.Ano, 
-    V.Tipo_cambio, 
-    Emp.Nome_empresa
-FROM locadora_dw.Veiculo V
-JOIN locadora_dw.Categoria C ON V.Id_categoria = C.Id_categoria
-JOIN locadora_dw.Empresa Emp ON V.Id_empresa = Emp.Id_empresa;
-
-INSERT INTO Stg_cliente (
-    Sistema_Origem,
-    Id_cliente_oltp, 
-    Tipo_Cliente, 
-    Nome_ou_Razao_Social, 
-    Cidade, 
-    Uf
-)
-SELECT DISTINCT
-    'Grupo 01',
-    C.Id_cliente, 
-    C.Tipo_cliente,
-    COALESCE(PF.Nome_cliente, PJ.Razao_social),
-    E.Cidade, 
-    E.Uf
-FROM locadora_dw.Cliente C
-JOIN locadora_dw.Endereco E ON C.Id_endereco = E.Id_endereco
-LEFT JOIN locadora_dw.Cliente_pf PF ON C.Id_cliente = PF.Id_cliente
-LEFT JOIN locadora_dw.Cliente_pj PJ ON C.Id_cliente = PJ.Id_cliente;
-
-INSERT INTO Stg_motorista (
-    Sistema_Origem,
-    Id_motorista_oltp, 
-    Nome_motorista, 
-    Categoria_Cnh, 
-    Genero_motorista, 
-    Data_Nascimento
-)
-SELECT DISTINCT
-    'Grupo 01',
-    Id_motorista, 
-    Nome_motorista, 
-    Categoria_cnh, 
-    Genero_motorista, 
-    Data_nascimento_motorista
-FROM locadora_dw.Motorista;
-
-INSERT INTO Stg_locacao (
-    Sistema_Origem,
-    Id_locacao_oltp, 
-    Id_patio_retirada_oltp, 
-    Id_patio_devolucao_oltp, 
-    Id_veiculo_oltp, 
-    Id_cliente_oltp, 
-    Id_motorista_oltp, 
-    Data_Retirada, 
-    Data_Devolucao, 
-    Km_Retirada, 
-    Km_Devolucao, 
-    Valor_Total
-)
-SELECT 
-    'Grupo 01',
-    L.id_locacao, 
-    L.id_patio_retirada,       
-    L.id_patio_devolucao,  
-    L.id_veiculo, 
-    R.id_cliente, 
-    L.id_motorista,
-    L.data_hora_retirada_real, 
-    L.data_hora_devolucao_real,
-    L.km_retirada, 
-    L.km_devolucao, 
-    L.valor_total_final
-FROM locadora_dw.locacao L
-JOIN locadora_dw.reserva R ON L.id_reserva = R.id_reserva;
-
--- Grupo 02
-
-INSERT INTO Stg_patio (
-    Sistema_Origem,
-    Id_patio_oltp, 
-    Nome_patio, 
-    Cidade, 
-    Uf, 
-    Capacidade
-)
-SELECT 
-    'Grupo 02', 
-    id_patio, 
-    nome_patio, 
-    localizacao, -- O modelo deles não separa cidadeo
-    NULL,        -- O modelo deles não possui UF separada para o pátio
-    NULL         -- O modelo deles não armazena a capacidade de vagas
-FROM db_grupo_02.PATIO;
-
-INSERT INTO Stg_veiculo (
-    Sistema_Origem,
-    Id_veiculo_oltp, 
-    Placa, 
-    Marca, 
-    Modelo, 
-    Categoria_Nome, 
-    Ano, 
-    Tipo_Cambio, 
-    Empresa_Dona
-)
-SELECT 
-    'Grupo 02', 
-    V.id_veiculo, 
-    V.placa, 
-    V.marca, 
-    V.modelo, 
-    GV.nome_grupo,   -- Nome do grupo vem da tabela GRUPO_VEICULO
-    NULL,            -- O modelo deles não possui o Ano do veículo
-    V.mecanizacao,   -- Mapeamos "mecanizacao" para a nossa coluna "Tipo_Cambio"
-    E.nome_empresa   -- Trazendo o nome da dona através do JOIN
-FROM db_grupo_02.VEICULO V
-JOIN db_grupo_02.GRUPO_VEICULO GV ON V.id_grupo = GV.id_grupo
-JOIN db_grupo_02.EMPRESA E ON V.id_empresa = E.id_empresa;
-
-INSERT INTO Stg_cliente (
-    Sistema_Origem, 
-    Id_cliente_oltp, 
-    Tipo_Cliente, 
-    Nome_ou_Razao_Social, 
-    Cidade, 
-    Uf
-)
-SELECT 
-    'Grupo 02', 
-    id_cliente, 
-    tipo_cliente, 
-    nome_razao_social, 
-    cidade, 
-    estado
-FROM db_grupo_02.CLIENTE;
-
-INSERT INTO Stg_motorista (
-    Sistema_Origem, 
-    Id_motorista_oltp, 
-    Nome_motorista, 
-    Categoria_Cnh, 
-    Genero_motorista, 
-    Data_Nascimento
-)
-SELECT 
-    'Grupo 02', 
-    id_condutor, 
-    nome_condutor, 
-    categoria_cnh, 
-    NULL, -- O modelo deles não armazena o Gênero
-    NULL  -- O modelo deles não armazena a Data de Nascimento
-FROM db_grupo_02.CONDUTOR;
-
-INSERT INTO Stg_locacao (
-    Sistema_Origem, 
-    Id_locacao_oltp,
-    Id_patio_retirada_oltp, 
-    Id_patio_devolucao_oltp, 
-    Id_veiculo_oltp, 
-    Id_cliente_oltp, 
-    Id_motorista_oltp, 
-    Data_Retirada, 
-    Data_Devolucao, 
-    Km_Retirada, 
-    Km_Devolucao, 
-    Valor_Total
-)
-SELECT 
-    'Grupo 02', 
-    id_locacao, 
-    id_patio_retirada, 
-    id_patio_devolucao_real, 
-    id_veiculo, 
-    id_cliente, 
-    id_condutor, 
-    data_hora_retirada, 
-    data_hora_real_devolucao, 
-    NULL, -- O modelo deles não armazena quilometragem
-    NULL, -- O modelo deles não armazena quilometragem
-    valor_final
-FROM db_grupo_02.LOCACAO;
-
--- Grupo 03
-
-INSERT INTO Stg_patio (
-    Sistema_Origem, 
-    Id_patio_oltp, 
-    Nome_patio, 
-    Cidade, 
-    Uf, 
-    Capacidade
-)
-SELECT 
-    'Grupo 03', 
-    P.Id_patio, 
-    P.Nome_patio, 
-    E.Cidade, 
-    E.UF, 
-    NULL -- O modelo deles não possui capacidade total na tabela de Pátio
-FROM db_grupo_03.Patio P
-JOIN db_grupo_03.Endereco E ON P.Id_endereco = E.Id_endereco;
-
-INSERT INTO Stg_veiculo (
-    Sistema_Origem, 
-    Id_veiculo_oltp, 
-    Placa, 
-    Marca, 
-    Modelo, 
-    Categoria_Nome,
-    Ano, 
-    Tipo_Cambio, 
-    Empresa_Dona
-)
-SELECT 
-    'Grupo 03', 
-    V.Id_veiculo, 
-    V.Placa, 
-    V.Marca, 
-    V.Modelo, 
-    V.Categoria, 
-    CAST(V.Ano AS UNSIGNED), -- Garantindo a tipagem de CHAR(4) para INT
-    CASE WHEN SC.Direcao_automatica = 1 THEN 'Automático' ELSE 'Manual' END, -- Mapeando o campo de direção automática para o tipo de câmbio
-    'Grupo 03 S.A.' -- O veículo deles não tem ligação direta com a empresa, assumimos uma empresa genérica para todos os veículos do grupo
-FROM db_grupo_03.Veiculo V
-JOIN db_grupo_03.Especificacoes_const SC ON V.Id_spec_const = SC.Id_spec_const;
+-- Grupo:
+-- Bernardo Brandão Pozzato Carvalho Costa (123289593)
+-- Enzo de Carvalho Sampaio (123386206)
+-- Giovanni Faletti Almeida (123184214)
+-- Guilherme En Shih Hu (123224674)
+-- Maria Victoria França Silva Ramos (123311073)
 
 
-INSERT INTO Stg_cliente (
-    Sistema_Origem, 
-    Id_cliente_oltp, 
-    Tipo_Cliente, 
-    Nome_ou_Razao_Social, 
-    Cidade, 
-    Uf
-)
-SELECT 
-    'Grupo 03', 
-    C.Id_cliente, 
-    'PF', -- No modelo deles, todos os clientes são Pessoas Físicas - PF
-    C.Nome_completo, 
-    E.Cidade, 
-    E.UF
-FROM db_grupo_03.Cliente C
-JOIN db_grupo_03.Endereco E ON C.Id_endereco = E.Id_endereco;
+--  MODELO ENTIDADE-RELACIONAMENTO - SISTEMA DE LOCAÇÃO DE VEÍCULOS
+-- Esse drop é importante, porque senão, se vc rodar mais de uma vez, dá erro de "vc já criou essa tabela"
+DROP DATABASE IF EXISTS locadora;
+CREATE DATABASE IF NOT EXISTS locadora CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+USE locadora;
+ 
+CREATE TABLE Endereco (
+    Id_endereco     INT             NOT NULL AUTO_INCREMENT,
+    UF              CHAR(2)         NOT NULL,           
+    Cidade          VARCHAR(100)    NOT NULL,
+    CEP             CHAR(8)         NOT NULL,
+    Bairro          VARCHAR(100)    NOT NULL,
+    Rua_Avenida     VARCHAR(150)    NOT NULL,
+    Numero          VARCHAR(20)     NULL,   
+    Complemento     VARCHAR(100)    NULL,       -- pode ser nulo (bloco, apto, casa...)
+ 
+    CONSTRAINT PK_Endereco PRIMARY KEY (Id_endereco),
+    CONSTRAINT CHK_CEP_len  CHECK (CHAR_LENGTH(CEP) = 8)
+);
+ 
+--    Pix e boleto são processados na hora, só o cartão que entra no modelo
+CREATE TABLE Dados_cobranca (
+    Id_dados_cobranca   INT             NOT NULL AUTO_INCREMENT,
+    Numero_cartao       VARCHAR(19)     NOT NULL,
+    Validade            DATE            NOT NULL,
+    Nome_titular        VARCHAR(150)    NOT NULL,
+    CPF_titular         CHAR(11)        NOT NULL,
+    CVV                 VARCHAR(4)      NOT NULL,   -- 3 dígitos ou 4 depende do cartão
+ 
+    CONSTRAINT PK_Dados_cobranca    PRIMARY KEY (Id_dados_cobranca),
+    CONSTRAINT UQ_cpf_titular   	UNIQUE (CPF_titular),
+    CONSTRAINT CHK_Cartao_len       CHECK (CHAR_LENGTH(Numero_cartao) BETWEEN 13 AND 19),
+    CONSTRAINT CHK_CPF_titular      CHECK (CHAR_LENGTH(CPF_titular) = 11),
+    CONSTRAINT CHK_CVV              CHECK (CHAR_LENGTH(CVV) IN (3, 4))
+);
+ 
+CREATE TABLE Documento_cliente (
+    Id_documento            INT         NOT NULL AUTO_INCREMENT,
+    CPF                     CHAR(11) 	NULL, -- Pode ser nulo, caso PASS não seja nulo
+    CNH                     CHAR(11) 	NULL, -- Pode ser nulo, caso HAB ESTR  não seja nulo
+    Passaporte              VARCHAR(30) NULL,   -- formato variável por país 
+    Habilitacao_estrangeira VARCHAR(30) NULL,   -- formato variável por país
+ 
+    CONSTRAINT PK_Documento_cliente PRIMARY KEY (Id_documento),
+    -- Pelo menos um documento de identidade deve estar presente
+    CONSTRAINT CHK_Doc_identidade   CHECK (CPF IS NOT NULL OR Passaporte IS NOT NULL),
+    -- Pelo menos uma habilitação deve estar presente
+    CONSTRAINT CHK_Doc_habilitacao  CHECK (CNH IS NOT NULL OR Habilitacao_estrangeira IS NOT NULL),
+    CONSTRAINT CHK_CPF_len          CHECK (CPF IS NULL OR CHAR_LENGTH(CPF) = 11),
+    CONSTRAINT CHK_CNH_len          CHECK (CNH IS NULL OR CHAR_LENGTH(CNH) = 11)
+);
+ 
+CREATE TABLE Cliente (
+    Id_cliente          INT             NOT NULL AUTO_INCREMENT,
+    Id_documento        INT             NOT NULL,
+    Id_endereco         INT             NOT NULL,
+    Id_dados_cobranca   INT             NULL,   -- apenas obrigatório para pagamento por cartão
+    Nome_completo       VARCHAR(200)    NOT NULL,
+    Genero              VARCHAR(30)     NOT NULL,   
+    Nacionalidade       VARCHAR(60)     NOT NULL,
+    Data_nascimento     DATE            NOT NULL,
+    Telefone            VARCHAR(20)     NOT NULL,   
+    Email               VARCHAR(150)    NOT NULL,
+ 
+    CONSTRAINT PK_Cliente           PRIMARY KEY (Id_cliente),
+    CONSTRAINT FK_Cli_Documento     FOREIGN KEY (Id_documento)      REFERENCES Documento_cliente(Id_documento),
+    CONSTRAINT FK_Cli_Endereco      FOREIGN KEY (Id_endereco)       REFERENCES Endereco(Id_endereco),
+    CONSTRAINT FK_Cli_Cobranca      FOREIGN KEY (Id_dados_cobranca) REFERENCES Dados_cobranca(Id_dados_cobranca)
+);
+ 
+CREATE TABLE Grupo (
+    Id_grupo        INT             NOT NULL AUTO_INCREMENT,
+    Nome            VARCHAR(100)    NOT NULL,
+    Descricao       VARCHAR(500)    NOT NULL,
+    Diaria_grupo    DECIMAL(10,2)   NOT NULL,
+ 
+    CONSTRAINT PK_Grupo PRIMARY KEY (Id_grupo)
+);
+ -- Dados Que não mudam na vida útil do veículo 
+CREATE TABLE Especificacoes_const (
+    Id_spec_const           INT     NOT NULL AUTO_INCREMENT,
+    Vidro_eletrico          TINYINT(1) NOT NULL DEFAULT 0,  -- 0=Não / 1=Sim
+    Trava_eletrica          TINYINT(1) NOT NULL DEFAULT 0,
+    Dir_hidraulica          TINYINT(1) NOT NULL DEFAULT 0,
+    Ar_condicionado         TINYINT(1) NOT NULL DEFAULT 0,
+    Direcao_automatica      TINYINT(1) NOT NULL DEFAULT 0,  -- 0=Manual / 1=Automático
+    Qtd_pessoas             INT     NOT NULL,
+    Capacidade_mala         INT     NOT NULL,   -- em litros
+    Pressao_pneu_ideal      INT     NOT NULL,   -- em PSI
+    Capacidade_oleo         INT     NOT NULL,   -- em litros
+    Capacidade_tanque       INT     NOT NULL,   -- em litros
+ 
+    CONSTRAINT PK_Spec_const PRIMARY KEY (Id_spec_const)
+);
 
-INSERT INTO Stg_motorista (
-    Sistema_Origem, 
-    Id_motorista_oltp, 
-    Nome_motorista, 
-    Categoria_Cnh, 
-    Genero_motorista, 
-    Data_Nascimento
-)
-SELECT 
-    'Grupo 03', 
-    C.Id_cliente, -- Como eles não separam motorista, o cliente vira o motorista
-    C.Nome_completo, 
-    'ND', -- "Não Declarado": O grupo não armazena a Categoria
-    LEFT(C.Genero, 1), -- Pega apenas a primeira letra do gênero para se adequar ao nosso modelo
-    C.Data_nascimento
-FROM db_grupo_03.Cliente C;
+-- especificações que podem mudar
+CREATE TABLE Especificacoes_var (
+    Id_spec_var     INT     NOT NULL AUTO_INCREMENT,
+    Gasolina        INT     NOT NULL,   -- nível atual (litros) -> capacidade de tanque
+    Oleo            INT     NOT NULL,   -- nível atual (litros) ->  capacidade de oleo
+    Pressao_pneu    INT     NOT NULL,   -- em PSI
+ 
+    CONSTRAINT PK_Spec_var 			PRIMARY KEY (Id_spec_var),
+    CONSTRAINT CHK_Gasolina         CHECK (Gasolina >= 0),
+    CONSTRAINT CHK_Oleo             CHECK (Oleo >= 0)
+);
+ 
+CREATE TABLE Veiculo (
+    Id_veiculo      INT             NOT NULL AUTO_INCREMENT,
+    Id_grupo        INT             NOT NULL,
+    Id_spec_var     INT             NOT NULL,
+    Id_spec_const   INT             NOT NULL,
+    Categoria       VARCHAR(50)     NOT NULL,   -- Sedan, SUV, Hatch, Esportivo, etc
+    Marca           VARCHAR(60)     NOT NULL,
+    Modelo          VARCHAR(60)     NOT NULL,
+    Ano             CHAR(4)         NOT NULL,
+    Versao          VARCHAR(60)     NOT NULL,
+    Cor             VARCHAR(40)     NOT NULL,
+    Chassi          CHAR(17)    	NOT NULL,
+    Placa           CHAR(7)      	NOT NULL,       -- tipo AAA-9999 ou AAA9A99
+ 
+    CONSTRAINT PK_Veiculo           PRIMARY KEY (Id_veiculo),
+    CONSTRAINT UQ_Chassi            UNIQUE      (Chassi),
+    CONSTRAINT UQ_Placa             UNIQUE      (Placa),
+    CONSTRAINT FK_Vei_Grupo         FOREIGN KEY (Id_grupo)      REFERENCES Grupo(Id_grupo),
+    CONSTRAINT FK_Vei_SpecVar       FOREIGN KEY (Id_spec_var)   REFERENCES Especificacoes_var(Id_spec_var),
+    CONSTRAINT FK_Vei_SpecConst     FOREIGN KEY (Id_spec_const) REFERENCES Especificacoes_const(Id_spec_const),
+    CONSTRAINT CHK_Ano				CHECK(LENGTH(Ano = 4) AND Ano IS NOT NULL),
+    CONSTRAINT CHK_Placa			CHECK(LENGTH(Placa)=7),
+    CONSTRAINT CHK_Chassi      		CHECK (LENGTH(Chassi) = 17 AND UPPER(Chassi) NOT LIKE '%I%' AND UPPER(Chassi) NOT LIKE '%O%' AND UPPER(Chassi) NOT LIKE '%Q%')
+);
+  CREATE TABLE Imagem_veiculo (
+    Id_imagem_veiculo   INT             NOT NULL AUTO_INCREMENT,
+    Id_veiculo			INT 			NOT NULL,
+    Url_arquivo         VARCHAR(500)    NOT NULL,
+    Tipo_imagem         VARCHAR(50)     NOT NULL,   -- ex: 'frente', 'lateral', 'interior'
+    Data_upload         DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,
+ 
+    CONSTRAINT PK_Imagem_veiculo    PRIMARY KEY (Id_imagem_veiculo),
+    CONSTRAINT UQ_url_arquivo		UNIQUE (Url_arquivo),
+    CONSTRAINT FK_veiculo			FOREIGN KEY(Id_veiculo)	REFERENCES Veiculo(Id_veiculo)
+);
+CREATE TABLE Empresa (
+    Id_empresa      INT             NOT NULL AUTO_INCREMENT,
+    Id_endereco     INT             NOT NULL,
+    Nome_empresa    VARCHAR(150)    NOT NULL,
+    CNPJ            CHAR(14)        NOT NULL,
 
-INSERT INTO Stg_locacao (
-    Sistema_Origem, Id_locacao_oltp, Id_patio_retirada_oltp, Id_patio_devolucao_oltp, 
-    Id_veiculo_oltp, Id_cliente_oltp, Id_motorista_oltp, Data_Retirada, Data_Devolucao, 
-    Km_Retirada, Km_Devolucao, Valor_Total
-)
-SELECT 
-    'Grupo 03', 
-    L.Id_locacao, 
-    L.Id_patio, -- Pátio real de retirada
-    COALESCE(Vag.Id_patio, R.Id_patio_fim), -- Pátio real de devolução (via Vaga) ou o previsto na Reserva caso não devolvido
-    L.Id_veiculo, 
-    R.Id_cliente, 
-    R.Id_cliente, -- Motorista é o próprio cliente
-    L.Data_locacao, 
-    D.Data_devolucao, 
-    NULL, -- O modelo deles não controla quilometragem
-    NULL, 
-    R.Preco_final
-FROM db_grupo_03.Locacao L
-JOIN db_grupo_03.Reserva R ON L.Id_reserva = R.Id_reserva
-LEFT JOIN db_grupo_03.Devolucao D ON L.Id_locacao = D.Id_locacao
-LEFT JOIN db_grupo_03.Vaga Vag ON D.Id_vaga = Vag.Id_vaga;
+    CONSTRAINT PK_Empresa       PRIMARY KEY (Id_empresa),
+    CONSTRAINT UQ_CNPJ          UNIQUE (CNPJ),
+    CONSTRAINT FK_Emp_Endereco  FOREIGN KEY (Id_endereco) REFERENCES Endereco(Id_endereco),
+    CONSTRAINT CHK_CNPJ_len     CHECK (CHAR_LENGTH(CNPJ) = 14)
+);
+ 
+CREATE TABLE Patio (
+    Id_patio        INT             NOT NULL AUTO_INCREMENT,
+    Id_endereco     INT             NOT NULL,
+    Id_empresa      INT             NOT NULL,
+    Nome_patio      VARCHAR(150)    NOT NULL,
+ 
+    CONSTRAINT PK_Patio         PRIMARY KEY (Id_patio),
+    CONSTRAINT FK_Pat_Endereco  FOREIGN KEY (Id_endereco) REFERENCES Endereco(Id_endereco),
+    CONSTRAINT FK_Pat_Empresa   FOREIGN KEY (Id_empresa)  REFERENCES Empresa(Id_empresa)
+);
+ 
+CREATE TABLE Vaga (
+    Id_vaga         INT     NOT NULL AUTO_INCREMENT,
+    Id_patio        INT     NOT NULL,
+    Id_veiculo      INT     NULL,   -- NULL quando a vaga está livre
+	Alfanum_vaga    VARCHAR(20)     NOT NULL,
+    CONSTRAINT PK_Vaga        PRIMARY KEY (Id_vaga),
+    CONSTRAINT FK_Vag_Patio     FOREIGN KEY (Id_patio)   REFERENCES Patio(Id_patio),
+    CONSTRAINT FK_Vag_Veiculo   FOREIGN KEY (Id_veiculo) REFERENCES Veiculo(Id_veiculo)
+);
+ 
 
--- Grupo 04
+CREATE TABLE Seguro (
+    Id_seguro       INT             NOT NULL AUTO_INCREMENT,
+    Nivel           VARCHAR(50)     NOT NULL,   -- ex: Básico, Intermediário, Total
+    Descricao       VARCHAR(500)    NOT NULL,
+    Diaria_seguro   DECIMAL(10,2)   NOT NULL,
+ 
+    CONSTRAINT PK_Seguro PRIMARY KEY (Id_seguro)
+);
+ 
 
-INSERT INTO Stg_patio (
-    Sistema_Origem, 
-    Id_patio_oltp, 
-    Nome_patio, 
-    Cidade, 
-    Uf, 
-    Capacidade
-)
-SELECT 
-    'Grupo 04', 
-    id_patio, 
-    endereco, -- Usando o endereço como nome para não ficar em branco
-    endereco, -- Jogamos a string inteira na cidade, pois não há separação
-    NULL, 
-    n_vagas -- O modelo deles armazena a capacidade como número de vagas
-FROM db_grupo_04.patio;
+CREATE TABLE Pagamento (
+    Id_pagamento    INT     NOT NULL AUTO_INCREMENT,
+    Nota_fiscal     CHAR(44)     NOT NULL, -- 44 dígitos no código da nota fiscal
+ 
+    CONSTRAINT PK_Pagamento PRIMARY KEY (Id_pagamento)
+);
+ 
+--     Pátio_origem e Pátio_fim referenciam a mesma tabela Patio
+CREATE TABLE Reserva (
+    Id_reserva              INT             NOT NULL AUTO_INCREMENT,
+    Id_cliente              INT             NOT NULL,
+    Id_grupo                INT             NOT NULL,
+    Id_pagamento            INT             NOT NULL,
+    Id_seguro               INT             NOT NULL,
+    Id_patio_origem         INT             NOT NULL,
+    Id_patio_fim            INT             NOT NULL,
+    Preco_final             DECIMAL(10,2)   NOT NULL,
+    Data_inicio_combinada   DATETIME        NOT NULL,
+    Data_fim_combinada      DATETIME        NOT NULL,
+    Estado_reserva          TINYINT         NOT NULL DEFAULT 0,
+        -- 0 = em andamento | 1 = cancelada | 2 = confirmada
+    Data_reserva            DATE            NOT NULL DEFAULT (CURRENT_DATE),
+ 
+    CONSTRAINT PK_Reserva               PRIMARY KEY (Id_reserva),
+    CONSTRAINT FK_Res_Cliente           FOREIGN KEY (Id_cliente)        REFERENCES Cliente(Id_cliente),
+    CONSTRAINT FK_Res_Grupo             FOREIGN KEY (Id_grupo)          REFERENCES Grupo(Id_grupo),
+    CONSTRAINT FK_Res_Pagamento         FOREIGN KEY (Id_pagamento)      REFERENCES Pagamento(Id_pagamento),
+    CONSTRAINT FK_Res_Seguro        	FOREIGN KEY (Id_seguro)       REFERENCES Seguro(Id_seguro),
+    CONSTRAINT FK_Res_PatioOrigem       FOREIGN KEY (Id_patio_origem)   REFERENCES Patio(Id_patio),
+    CONSTRAINT FK_Res_PatioFim          FOREIGN KEY (Id_patio_fim)      REFERENCES Patio(Id_patio),
+    CONSTRAINT CHK_Data_fim             CHECK (Data_fim_combinada >= Data_inicio_combinada)
+    
+);
+ 
 
--- Muita informação faltando aqui, mas preenchemos o que temos e deixamos o resto como NULL.
-INSERT INTO Stg_veiculo (
-    Sistema_Origem, 
-    Id_veiculo_oltp, 
-    Placa, 
-    Marca, 
-    Modelo, 
-    Categoria_Nome, 
-    Ano, 
-    Tipo_Cambio, 
-    Empresa_Dona
-)
-SELECT 
-    'Grupo 04', 
-    id_veiculo, 
-    placa, 
-    NULL, -- Não há marca no modelo
-    modelo, 
-    NULL, -- Categoria só existe na tabela de Reserva deles, não no veículo
-    NULL, -- Não há ano
-    NULL, -- Não há tipo de câmbio
-    'Grupo 04 S.A.' 
-FROM db_grupo_04.veiculo;
+CREATE TABLE Caucao(
+Id_caucao	INT 				NOT NULL AUTO_INCREMENT,
+Valor		DECIMAL(10,2)		NOT NULL,
+Estado_caucao   TINYINT         NOT NULL DEFAULT 0, -- 0=Bloqueado | 1=Liberado | 2=Cobrança parcial | 3=Cobrança total
+CONSTRAINT PK_Caucao PRIMARY KEY (Id_caucao)
+);
+ -- Confirma se o cliente pegou o carro
+CREATE TABLE Locacao (
+    Id_locacao      INT         NOT NULL AUTO_INCREMENT,
+    Id_reserva      INT         NOT NULL,
+    Id_veiculo      INT         NOT NULL,
+    Id_spec_var     INT         NOT NULL,   -- foto/analise do estado do veículo na retirada
+    Id_caucao       INT         NOT NULL,
+    Id_patio		INT 		NOT NULL, 
+    Data_locacao    DATETIME    NOT NULL,   -- data/hora real da retirada
+ 
+    CONSTRAINT PK_Locacao           PRIMARY KEY (Id_locacao),
+    CONSTRAINT FK_Loc_Reserva       FOREIGN KEY (Id_reserva)  REFERENCES Reserva(Id_reserva),
+    CONSTRAINT FK_Loc_Veiculo       FOREIGN KEY (Id_veiculo)  REFERENCES Veiculo(Id_veiculo),
+    CONSTRAINT FK_Loc_SpecVar       FOREIGN KEY (Id_spec_var) REFERENCES Especificacoes_var(Id_spec_var),
+	CONSTRAINT FK_Patio           	FOREIGN KEY (Id_patio)	  REFERENCES Patio(Id_patio), 
+    CONSTRAINT FK_Loc_Caucao    FOREIGN KEY (Id_caucao)   REFERENCES Caucao(Id_caucao)
+);
+ 
+CREATE TABLE Custos_devolucao (
+    Id_custos_devolucao     INT             NOT NULL AUTO_INCREMENT,
+    Id_caucao               INT             NOT NULL,
+    Id_pagamento            INT             NOT NULL,
+    Valor_atraso            DECIMAL(10,2)   NULL,   -- atraso na devolução
+    Valor_reparos           DECIMAL(10,2)   NULL,   -- danos ao veículo
+    Valor_estado_veiculo    DECIMAL(10,2)   NULL,   -- tanque vazio, carro sujo, etc.
 
-INSERT INTO Stg_cliente (
-    Sistema_Origem, 
-    Id_cliente_oltp, 
-    Tipo_Cliente, 
-    Nome_ou_Razao_Social, 
-    Cidade, 
-    Uf
-)
-SELECT 
-    'Grupo 04', 
-    id_cliente, 
-    CASE WHEN CHAR_LENGTH(REPLACE(REPLACE(REPLACE(cpf_cnpj, '.', ''), '-', ''), '/', '')) > 11 THEN 'PJ' ELSE 'PF' END, 
-    nome, 
-    NULL, -- Endereço do cliente não é armazenado no modelo deles
-    NULL
-FROM db_grupo_04.cliente;
+    CONSTRAINT PK_Custos_dev    PRIMARY KEY (Id_custos_devolucao),
+    CONSTRAINT FK_CusDev_Caucao FOREIGN KEY (Id_caucao)     REFERENCES Caucao(Id_caucao),
+    CONSTRAINT FK_CusDev_Pag    FOREIGN KEY (Id_pagamento)  REFERENCES Pagamento(Id_pagamento)
+);
+CREATE TABLE Devolucao (
+    Id_devolucao  		  	INT         NOT NULL AUTO_INCREMENT,
+    Id_spec_var				INT         NOT NULL,
+    Id_custos_devolucao     INT         NOT NULL,
+    Id_locacao    		 	 INT         NOT NULL,
+    Id_vaga         		INT         NOT NULL,
+    Data_devolucao 			 DATETIME    NOT NULL,
+	
+    CONSTRAINT PK_Devolucao         PRIMARY KEY (Id_devolucao),
+    CONSTRAINT FK_spec_var			FOREIGN KEY (Id_spec_var) REFERENCES Especificacoes_var(Id_spec_var),
+	CONSTRAINT FK_Dev_Custos        FOREIGN KEY (Id_custos_devolucao) REFERENCES Custos_devolucao(Id_custos_devolucao),
+    CONSTRAINT FK_Dev_Locacao       FOREIGN KEY (Id_locacao) REFERENCES Locacao(Id_locacao),
+    CONSTRAINT FK_Dev_Vaga          FOREIGN KEY (Id_vaga)    REFERENCES Vaga(Id_vaga)
+);
 
--- Assim como no Grupo 03, o cliente é o próprio motorista.
-INSERT INTO Stg_motorista (
-    Sistema_Origem, 
-    Id_motorista_oltp, 
-    Nome_motorista, 
-    Categoria_Cnh, 
-    Genero_motorista, 
-    Data_Nascimento
-)
-SELECT 
-    'Grupo 04', 
-    id_cliente, 
-    nome, 
-    NULL, -- Eles têm o número da CNH, mas não a Categoria (A, B, C...)
-    NULL, -- Não armazenam Gênero
-    data_nascimento
-FROM db_grupo_04.cliente;
 
--- Precisamos fazer um JOIN com a tabela de pagamento deles para conseguir o "Valor_Total".
-INSERT INTO Stg_locacao (
-    Sistema_Origem, 
-    Id_locacao_oltp, 
-    Id_patio_retirada_oltp, 
-    Id_patio_devolucao_oltp, 
-    Id_veiculo_oltp, 
-    Id_cliente_oltp, 
-    Id_motorista_oltp, 
-    Data_Retirada, 
-    Data_Devolucao, 
-    Km_Retirada, 
-    Km_Devolucao, 
-    Valor_Total
-)
-SELECT 
-    'Grupo 04', 
-    L.id_locacao, 
-    L.id_patio_retirada, 
-    L.id_patio_devolucao, 
-    L.id_veiculo, 
-    L.id_cliente, 
-    L.id_cliente, -- O motorista é o cliente
-    L.data_retirada, 
-    L.data_devolucao, 
-    NULL, 
-    NULL, 
-    P.valor -- Trazendo o valor da tabela de pagamento
-FROM db_grupo_04.locacao L
-LEFT JOIN (
-    SELECT id_locacao, SUM(valor) AS valor_total 
-    FROM db_grupo_04.pagamento 
-    GROUP BY id_locacao
-) P ON L.id_locacao = P.id_locacao;
+CREATE TABLE Extensao_reserva (
+    Id_extensao_reserva INT             NOT NULL AUTO_INCREMENT,
+    Id_locacao          INT             NOT NULL,
+    Id_reserva          INT             NOT NULL,
+    Id_pagamento        INT             NOT NULL,
+    Qtd_dias            INT             NOT NULL,
+    Valor               DECIMAL(10,2)   NOT NULL,
+    Data_extensao       DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT PK_Extensao      PRIMARY KEY (Id_extensao_reserva),
+    CONSTRAINT FK_Ext_Locacao   FOREIGN KEY (Id_locacao)    REFERENCES Locacao(Id_locacao),
+    CONSTRAINT FK_Ext_Reserva   FOREIGN KEY (Id_reserva)    REFERENCES Reserva(Id_reserva),
+    CONSTRAINT FK_Ext_Pagamento FOREIGN KEY (Id_pagamento)  REFERENCES Pagamento(Id_pagamento),
+    CONSTRAINT CHK_Qtd_dias     CHECK (Qtd_dias > 0)
+);
+
+CREATE TABLE Imagem_devolucao(
+	Id_imagem_devolucao		INT 			NOT NULL AUTO_INCREMENT,
+    Id_devolucao			INT				NOT NULL,
+    Url_arquivo				VARCHAR(255)	NOT NULL,
+    Tipo_imagem				VARCHAR(255)	NOT NULL,
+    Data_upload				DATETIME		NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    
+    CONSTRAINT	PK_imagem_devolucao	PRIMARY KEY (Id_imagem_devolucao),
+    CONSTRAINT	FK_devolucao		FOREIGN KEY (Id_devolucao)	REFERENCES Devolucao(Id_devolucao),
+	CONSTRAINT	UQ_url_arquivo				UNIQUE (Url_arquivo)
+);
