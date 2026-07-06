@@ -45,7 +45,6 @@ Este repositório reúne as três etapas do trabalho da disciplina de Banco de D
 │       └── 05_script_relatorios_e_matriz.sql     # Consultas analíticas e relatórios sobre o DW
 │
 ├── parte3_bigdata/                       # Proposta Executiva de Big Data (Parte III)
-│   ├── Proposta_Executiva_BigData_Parte3.tex     # Fonte LaTeX da proposta (compilável no Overleaf)
 │   ├── Proposta_Executiva_BigData_Parte3.pdf     # Proposta executiva compilada (PDF final)
 │   └── slides_apresentacao_parte3.pdf            # Slides usados na defesa oral
 │
