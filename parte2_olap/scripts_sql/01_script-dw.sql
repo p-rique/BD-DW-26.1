@@ -27,6 +27,7 @@ CREATE TABLE dim_tempo (
 
 CREATE TABLE dim_patio (
     sk_patio            INT             NOT NULL AUTO_INCREMENT,
+    sistema_origem      VARCHAR(50)     NOT NULL,    -- Adicionado para evitar colisão de chaves
     id_patio_oltp       INT             NOT NULL,
     nome_patio          VARCHAR(100)    NOT NULL,
     cidade              VARCHAR(100)    NOT NULL,
@@ -36,13 +37,21 @@ CREATE TABLE dim_patio (
     CONSTRAINT pk_dim_patio PRIMARY KEY (sk_patio)
 );
 
+CREATE TABLE dim_categoria (
+    sk_categoria        INT             NOT NULL AUTO_INCREMENT,
+    nome_categoria      VARCHAR(50)     NOT NULL,
+
+    CONSTRAINT pk_dim_categoria PRIMARY KEY (sk_categoria)
+);
+
 CREATE TABLE dim_veiculo (
     sk_veiculo          INT             NOT NULL AUTO_INCREMENT,
+    sistema_origem      VARCHAR(50)     NOT NULL,    -- Adicionado para evitar colisão de chaves
     id_veiculo_oltp     INT             NOT NULL,
     placa               VARCHAR(10)     NOT NULL,
     marca               VARCHAR(50)     NOT NULL,
     modelo              VARCHAR(50)     NOT NULL,
-    categoria_nome      VARCHAR(50)     NOT NULL,
+    categoria_nome      VARCHAR(50)     NOT NULL, 
     ano                 INT             NOT NULL,
     tipo_cambio         VARCHAR(20)     NULL,
     empresa_dona        VARCHAR(100)    NOT NULL, 
@@ -52,6 +61,7 @@ CREATE TABLE dim_veiculo (
 
 CREATE TABLE dim_cliente (
     sk_cliente          INT             NOT NULL AUTO_INCREMENT,
+    sistema_origem      VARCHAR(50)     NOT NULL,    -- Adicionado para evitar colisão de chaves
     id_cliente_oltp     INT             NOT NULL,
     tipo_cliente        CHAR(2)         NOT NULL, 
     nome_ou_razao_social VARCHAR(100)   NOT NULL,
@@ -64,29 +74,30 @@ CREATE TABLE dim_cliente (
 
 CREATE TABLE dim_motorista (
     sk_motorista        INT             NOT NULL AUTO_INCREMENT,
+    sistema_origem      VARCHAR(50)     NOT NULL,    -- Adicionado para evitar colisão de chaves
     id_motorista_oltp   INT             NOT NULL,
     nome_motorista      VARCHAR(100)    NOT NULL,
     categoria_cnh       VARCHAR(3)      NOT NULL,
-    genero_motorista    CHAR(1)         NULL,
+    genero_motorista    VARCHAR(20)     NULL,        -- Ajustado para comportar 'Masculino'/'Feminino'
     faixa_etaria        VARCHAR(20)     NULL, 
 
     CONSTRAINT pk_dim_motorista PRIMARY KEY (sk_motorista)
 );
 
--- 2. TABELA FATO
+-- 2. TABELAS FATO
 
 CREATE TABLE fato_locacao (
     sk_locacao          INT             AUTO_INCREMENT PRIMARY KEY,
+    sistema_origem      VARCHAR(50)     NOT NULL, -- Para rastrear a empresa dona da locação
     id_locacao_oltp     INT             NOT NULL,
     sk_cliente          INT             NOT NULL,
     sk_motorista        INT             NOT NULL, 
     sk_veiculo          INT             NOT NULL,
     sk_patio_retirada   INT             NOT NULL,
-    sk_patio_devolucao  INT             NOT NULL,
+    sk_patio_devolucao  INT             NULL,       -- NULL até a devolução
     sk_tempo_retirada   INT             NOT NULL,
     sk_tempo_devolucao  INT             NULL,       -- Null até a devolução
     
-    -- Métricas / Fatos
     qtd_locacao         INT             DEFAULT 1,
     km_rodados          INT             NULL,    
     valor_total         DECIMAL(10,2)   NULL,
@@ -108,6 +119,42 @@ CREATE TABLE fato_locacao (
     INDEX idx_fato_veiculo     (sk_veiculo),
     INDEX idx_fato_cliente     (sk_cliente),
     INDEX idx_fato_motorista   (sk_motorista)
+);
+
+CREATE TABLE fato_reserva (
+    sk_reserva              INT             AUTO_INCREMENT PRIMARY KEY,
+    sistema_origem          VARCHAR(50)     NOT NULL,   -- Adicionado para rastrear a empresa dona da reserva
+    id_reserva_oltp         INT             NOT NULL,
+    sk_cliente              INT             NOT NULL,
+    sk_categoria            INT             NOT NULL,
+    sk_patio_retirada       INT             NOT NULL,
+    sk_patio_devolucao      INT             NULL,       -- NULL até a devolução
+    sk_tempo_reserva        INT             NULL,       -- NULL até a confirmação da reserva
+    sk_tempo_prev_retirada  INT             NOT NULL,
+    sk_tempo_prev_devolucao INT             NULL,       -- NULL até a devolução
+    
+    -- Métricas / Fatos
+    qtd_reserva             INT             DEFAULT 1,
+    duracao_prevista_dias   INT             NULL,
+    valor_previsto          DECIMAL(10,2)   NULL,
+    
+    -- Dimensão Degenerada
+    status_reserva          VARCHAR(30)     NULL,
+    
+    -- Constraints de Chave Estrangeira
+    CONSTRAINT fk_fato_res_cliente      FOREIGN KEY (sk_cliente)              REFERENCES dim_cliente(sk_cliente),
+    CONSTRAINT fk_fato_res_categoria    FOREIGN KEY (sk_categoria)            REFERENCES dim_categoria(sk_categoria),
+    CONSTRAINT fk_fato_res_patio_ret    FOREIGN KEY (sk_patio_retirada)       REFERENCES dim_patio(sk_patio),
+    CONSTRAINT fk_fato_res_patio_dev    FOREIGN KEY (sk_patio_devolucao)      REFERENCES dim_patio(sk_patio),
+    CONSTRAINT fk_fato_res_tempo_res    FOREIGN KEY (sk_tempo_reserva)        REFERENCES dim_tempo(sk_tempo),
+    CONSTRAINT fk_fato_res_tempo_pret   FOREIGN KEY (sk_tempo_prev_retirada)  REFERENCES dim_tempo(sk_tempo),
+    CONSTRAINT fk_fato_res_tempo_pdev   FOREIGN KEY (sk_tempo_prev_devolucao) REFERENCES dim_tempo(sk_tempo),
+
+    -- Índices de Performance para Consultas OLAP/BI
+    INDEX idx_fato_res_tempo_pret  (sk_tempo_prev_retirada),
+    INDEX idx_fato_res_patio_ret   (sk_patio_retirada),
+    INDEX idx_fato_res_categoria   (sk_categoria),
+    INDEX idx_fato_res_cliente     (sk_cliente)
 );
 
 -- 3. POPULAÇÃO DA DIM_TEMPO
@@ -140,4 +187,6 @@ END$$
 DELIMITER ;
 
 -- Executa o preenchimento automático
+START TRANSACTION;
 CALL popular_dim_tempo('2020-01-01', '2030-12-31');
+COMMIT;

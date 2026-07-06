@@ -69,3 +69,18 @@ CREATE TABLE Stg_locacao (
     Valor_Total                 DECIMAL(10,2)   NULL,
     Data_Carga                  DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
+
+CREATE TABLE Stg_reserva (
+    Sistema_Origem              VARCHAR(50)     NULL, -- Identificação da base de dados de origem
+    Id_reserva_oltp             INT             NULL,
+    Id_cliente_oltp             INT             NULL,
+    Id_patio_retirada_oltp      INT             NULL,
+    Id_patio_devolucao_oltp     INT             NULL,
+    Categoria_Nome              VARCHAR(50)     NULL, -- Unifica as nomenclaturas de Categoria/Grupo dos OLTPs
+    Data_Reserva                DATETIME        NULL,
+    Data_Prev_Retirada          DATETIME        NULL,
+    Data_Prev_Devolucao         DATETIME        NULL,
+    Valor_Previsto              DECIMAL(10,2)   NULL,
+    Status_Reserva              VARCHAR(30)     NULL,
+    Data_Carga                  DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
