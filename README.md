@@ -25,6 +25,10 @@ Este repositório reúne as três etapas do trabalho da disciplina de Banco de D
 
 ```text
 ├── parte1_oltp/                          # Módulo Transacional (Operacional)
+│   ├── enunciado/
+│   │   ├── enunciadoAvaliacao01_01.jpeg      # Enunciado da Avaliação 01 (OLTP) — página 1
+│   │   ├── enunciadoAvaliacao01_02.jpeg      # Enunciado da Avaliação 01 (OLTP) — página 2
+│   │   └── enunciadoAvaliacao01_03.jpeg      # Enunciado da Avaliação 01 (OLTP) — página 3
 │   ├── modelos/
 │   │   ├── locadora_trabalho_bg_dw.mwb.zip   # Arquivo de modelagem do MySQL Workbench
 │   │   ├── Modelo Conceitual.drawio.pdf      # Diagrama Conceitual (MER)
@@ -34,6 +38,9 @@ Este repositório reúne as três etapas do trabalho da disciplina de Banco de D
 │   └── Projeto Modelagem SBD OLTP.pdf        # Relatório descritivo do projeto operacional
 │
 ├── parte2_olap/                          # Módulo Analítico (Data Warehouse)
+│   ├── enunciado/
+│   │   ├── enunciadoAvaliacao02_01.jpeg      # Enunciado da Avaliação 02 (OLAP/DW) — página 1
+│   │   └── enunciadoAvaliacao02_02.jpeg      # Enunciado da Avaliação 02 (OLAP/DW) — página 2
 │   ├── Modelo_Dimensional_Estrela.pdf        # Diagrama do esquema estrela do DW
 │   ├── Desenvolvimento_Processo_ETL.pdf      # Relatório descritivo do processo de ETL
 │   └── scripts_sql/
@@ -42,9 +49,19 @@ Este repositório reúne as três etapas do trabalho da disciplina de Banco de D
 │       ├── 02_script-staging.sql                 # Criação das tabelas da Staging Area
 │       ├── 03_script-extract.sql                 # Extração dos dados do OLTP para a Staging
 │       ├── 04_transformacao_e_carga.sql          # Transformação e carga da Staging para o DW
-│       └── 05_script_relatorios_e_matriz.sql     # Consultas analíticas e relatórios sobre o DW
+│       ├── 05_script_relatorios_e_matriz.sql     # Consultas analíticas e relatórios sobre o DW
+│       └── copias_grupos/                        # Cópias dos scripts entregues pelos demais grupos (referência)
+│           ├── grupo 02/
+│           │   ├── grupo_02_create_table.sql
+│           │   └── grupo_02_constraints.sql
+│           ├── grupo_03.sql
+│           └── grupo_04.sql
 │
 ├── parte3_bigdata/                       # Proposta Executiva de Big Data (Parte III)
+│   ├── enunciado/
+│   │   ├── enunciadoAvaliacao03_01.jpeg      # Enunciado da Avaliação 03 (Big Data) — página 1
+│   │   ├── enunciadoAvaliacao03_02.jpeg      # Enunciado da Avaliação 03 (Big Data) — página 2
+│   │   └── enunciadoAvaliacao03_03.jpeg      # Enunciado da Avaliação 03 (Big Data) — página 3
 │   ├── Proposta_Executiva_BigData_Parte3.pdf     # Proposta executiva compilada (PDF final)
 │   └── slides_apresentacao_parte3.pdf            # Slides usados na defesa oral
 │
@@ -54,20 +71,25 @@ Este repositório reúne as três etapas do trabalho da disciplina de Banco de D
 └── README.md                             # Este arquivo
 ```
 
+> 📝 Cada pasta `enunciado/` contém as imagens do enunciado oficial (fornecido pelo professor) referente àquela etapa da avaliação, preservado como registro do que foi solicitado em cada parte do trabalho.
+
 ---
 
 ## 📐 Destaques de Modelagem por Parte
 
 ### Parte I — OLTP
+- 📄 Enunciado original da avaliação disponível em [`parte1_oltp/enunciado/`](parte1_oltp/enunciado/).
 - **Especialização de Clientes (Herança):** separação de Clientes Pessoa Física (PF) e Pessoa Jurídica (PJ) através de tabelas especializadas compartilhando a mesma chave primária.
 - **Flexibilidade de Motoristas:** vinculação de motoristas independentes e associados a contas corporativas (PJ).
 - **Pátios Compartilhados:** modelagem das tabelas `Veiculo` e `Patio` já prevendo a identificação da empresa "dona" da frota, permitindo operação compartilhada entre as 6 marcas do consórcio.
 
 ### Parte II — OLAP / Data Warehouse
+- 📄 Enunciado original da avaliação disponível em [`parte2_olap/enunciado/`](parte2_olap/enunciado/).
 - Esquema estrela com tabela fato `fato_locacao` (métricas: `qtd_locacao`, `km_rodados`, `valor_total`) e dimensões `dim_veiculo`, `dim_cliente`, `dim_motorista`, `dim_patio`, `dim_tempo`, `dim_categoria`.
 - Pipeline de ETL completo: extração do OLTP → staging → transformação/carga → DW.
 
 ### Parte III — Big Data
+- 📄 Enunciado original da avaliação disponível em [`parte3_bigdata/enunciado/`](parte3_bigdata/enunciado/).
 - Arquitetura Lambda (Hot Path + Cold Path), com Kafka para ingestão, Flink para eventos críticos em tempo real, Spark para manutenção preditiva e MapReduce para processamento histórico de exaustão.
 - Persistência poliglota: Data Lake (S3), Cassandra, Redis e MongoDB Atlas.
 - Dashboard com 6 painéis operacionais e especificação funcional de um assistente de IA por voz (RAG).
